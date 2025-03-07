@@ -2,122 +2,117 @@ import streamlit as st
 import pandas as pd
 import os
 
-# File paths
-EMPLOYEE_FILE = "employees.xlsx"
-ASSET_FILE = "cleaned_asset_register.xlsx"
+# Load datasets
+EMPLOYEE_FILE = 'employees.xlsx'
+ASSET_FILE = 'cleaned_asset_register.xlsx'
 
-# Load Employees Data
-if os.path.exists(EMPLOYEE_FILE):
-    employees = pd.read_excel(EMPLOYEE_FILE)
-else:
-    employees = pd.DataFrame(columns=["Employee ID", "Name", "Position", "Department", "Phone", "Email"])
-    employees.to_excel(EMPLOYEE_FILE, index=False)
+# Ensure files exist
+if not os.path.exists(EMPLOYEE_FILE):
+    df_employees = pd.DataFrame(columns=['Employee ID', 'Name', 'Department', 'Phone', 'Email'])
+    df_employees.to_excel(EMPLOYEE_FILE, index=False)
 
-# Load Assets Data
-if os.path.exists(ASSET_FILE):
-    assets = pd.read_excel(ASSET_FILE)
-else:
-    st.error(f"{ASSET_FILE} not found! Please upload the cleaned asset file.")
+if not os.path.exists(ASSET_FILE):
+    st.error(f"Missing file: {ASSET_FILE}. Please upload the cleaned asset file.")
     st.stop()
 
-# Page Title
-st.title("Asset Management System")
+# Load Data
+df_employees = pd.read_excel(EMPLOYEE_FILE)
+df_assets = pd.read_excel(ASSET_FILE)
 
-# Sidebar Menu
-menu = st.sidebar.selectbox("Menu", [
-    "View Employees",
-    "Add Employee",
-    "Delete Employee",
-    "Search Employee",
-    "View Asset Register",
-    "Asset Condition Report",
-    "Financing Insights"
-])
+# Sidebar navigation
+menu = st.sidebar.selectbox("Select Page", ["Home", "Employee Management", "Asset Reports"])
 
-### Employee Management Section
-if menu == "View Employees":
-    st.subheader("All Employees")
-    st.dataframe(employees)
+# ----------------- HOME PAGE -----------------
+if menu == "Home":
+    st.markdown(
+        """
+        <div style="text-align: center;">
+            <img src="https://raw.githubusercontent.com/YourGitHubRepo/YourProject/main/header_logo.png" width="700">
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+    st.title("Welcome to Asset Management System")
 
-elif menu == "Add Employee":
-    st.subheader("Add New Employee")
+    st.write("""
+    ### About the Organization
+    **Ministry of East African Community, the ASALs and Regional Development**  
+    State Department for the ASALs and Regional Development is responsible for asset management and tracking to ensure accountability and proper resource utilization.
 
-    employee_id = st.text_input("Employee ID")
-    name = st.text_input("Name")
-    position = st.text_input("Position")
-    department = st.text_input("Department")
-    phone = st.text_input("Phone")
-    email = st.text_input("Email")
+    ### About This App
+    This Asset Management System allows you to:
+    - Track your organization's assets (where they are, who’s responsible for them)
+    - Monitor asset conditions (which assets are in poor condition)
+    - Analyze financing (which source financed which asset)
+    - Manage employee records (add, search, and delete employees)
 
-    if st.button("Add Employee"):
-        new_employee = {
-            "Employee ID": employee_id,
-            "Name": name,
-            "Position": position,
-            "Department": department,
-            "Phone": phone,
-            "Email": email
-        }
-        employees = pd.concat([employees, pd.DataFrame([new_employee])], ignore_index=True)
-        employees.to_excel(EMPLOYEE_FILE, index=False)
-        st.success(f"Employee {name} added successfully!")
+    This system works on both **desktop** and **mobile devices**.
 
-elif menu == "Delete Employee":
-    st.subheader("Delete Employee")
-    emp_id_to_delete = st.text_input("Enter Employee ID to Delete")
+    ### Contact Us
+    📧 Email: info@meac-asals.go.ke  
+    📞 Phone: +254-700-123-456  
+    🌐 Website: [www.meac-asals.go.ke](http://www.meac-asals.go.ke)
+    """)
 
-    if st.button("Delete Employee"):
-        employees = employees[employees["Employee ID"] != emp_id_to_delete]
-        employees.to_excel(EMPLOYEE_FILE, index=False)
-        st.success(f"Employee with ID {emp_id_to_delete} has been deleted.")
+    st.info("Use the sidebar to navigate to Employee Management or Asset Reports.")
 
-elif menu == "Search Employee":
-    st.subheader("Search Employee")
-    search_term = st.text_input("Enter Employee Name or ID")
+# ----------------- EMPLOYEE MANAGEMENT PAGE -----------------
+elif menu == "Employee Management":
+    st.header("Employee Management")
 
-    if st.button("Search"):
-        results = employees[
-            (employees["Name"].str.contains(search_term, case=False, na=False)) |
-            (employees["Employee ID"].str.contains(search_term, case=False, na=False))
-        ]
-        if not results.empty:
-            st.write("Search Results:")
-            st.dataframe(results)
-        else:
-            st.warning("No employee found with that Name or ID.")
+    action = st.radio("Choose Action", ["View Employees", "Add Employee", "Delete Employee"])
 
-### Asset Tracking Section
-elif menu == "View Asset Register":
-    st.subheader("Asset Register")
-    st.dataframe(assets)
+    if action == "View Employees":
+        st.write(df_employees)
 
-elif menu == "Asset Condition Report":
-    st.subheader("Condition Monitoring Report")
+    elif action == "Add Employee":
+        with st.form("Add Employee Form"):
+            emp_id = st.text_input("Employee ID")
+            name = st.text_input("Name")
+            department = st.text_input("Department")
+            phone = st.text_input("Phone")
+            email = st.text_input("Email")
 
-    # Count assets by condition
-    condition_summary = assets["Asset condition"].value_counts().reset_index()
-    condition_summary.columns = ["Condition", "Count"]
+            submitted = st.form_submit_button("Add Employee")
+            if submitted:
+                new_employee = pd.DataFrame([{
+                    'Employee ID': emp_id,
+                    'Name': name,
+                    'Department': department,
+                    'Phone': phone,
+                    'Email': email
+                }])
 
-    st.write("Summary of Asset Conditions:")
-    st.dataframe(condition_summary)
+                df_employees = pd.concat([df_employees, new_employee], ignore_index=True)
+                df_employees.to_excel(EMPLOYEE_FILE, index=False)
+                st.success(f"Employee {name} added successfully!")
 
-    # Optional Chart
-    st.bar_chart(condition_summary.set_index("Condition"))
+    elif action == "Delete Employee":
+        emp_id = st.selectbox("Select Employee ID to Delete", df_employees['Employee ID'])
+        if st.button("Delete Employee"):
+            df_employees = df_employees[df_employees['Employee ID'] != emp_id]
+            df_employees.to_excel(EMPLOYEE_FILE, index=False)
+            st.success(f"Employee {emp_id} deleted successfully!")
 
-    # Show details of poor condition assets
-    st.write("Assets in Poor Condition:")
-    poor_assets = assets[assets["Asset condition"].str.contains("poor", case=False, na=False)]
-    st.dataframe(poor_assets[["Asset Description", "Current Location", "Responsible officer"]])
+# ----------------- ASSET REPORTS PAGE -----------------
+elif menu == "Asset Reports":
+    st.header("Asset Reports")
 
-elif menu == "Financing Insights":
-    st.subheader("Financing Insights")
+    # Asset Tracking
+    st.subheader("Asset Tracking - Where are the assets?")
+    st.write(df_assets[['Asset Description', 'Current Location', 'Responsible officer']])
 
-    # Count assets by financing source
-    financing_summary = assets["Financed by/ source of funds"].value_counts().reset_index()
-    financing_summary.columns = ["Financing Source", "Count"]
+    # Condition Monitoring
+    st.subheader("Condition Monitoring - Assets in Poor Condition")
+    poor_assets = df_assets[df_assets['Asset condition'].str.lower() == 'poor']
+    st.write(poor_assets[['Asset Description', 'Current Location', 'Responsible officer']])
 
-    st.write("Assets by Financing Source:")
-    st.dataframe(financing_summary)
+    # Financing Insights
+    st.subheader("Financing Insights - Asset Funding Sources")
+    financing_report = df_assets.groupby('Financed by/ source of funds')['Asset Description'].count().reset_index()
+    financing_report.columns = ['Source of Funds', 'Number of Assets']
+    st.write(financing_report)
 
-    # Optional Chart
-    st.bar_chart(financing_summary.set_index("Financing Source"))
+    # Optional - Simple Visualization
+    st.bar_chart(financing_report.set_index('Source of Funds'))
+
