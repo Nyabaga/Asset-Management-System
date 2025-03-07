@@ -27,7 +27,7 @@ if menu == "Home":
     st.markdown(
         """
         <div style="text-align: center;">
-            <img src="https://raw.githubusercontent.com/YourGitHubRepo/YourProject/main/header_logo.png" width="700">
+            <img src="header_logo.png" width="700">
         </div>
         """,
         unsafe_allow_html=True
@@ -49,9 +49,9 @@ if menu == "Home":
     This system works on both **desktop** and **mobile devices**.
 
     ### Contact Us
-    📧 Email: info@meac-asals.go.ke  
-    📞 Phone: +254-700-123-456  
-    🌐 Website: [www.meac-asals.go.ke](http://www.meac-asals.go.ke)
+    📧 Email: ps@asals.go.ke  
+    📞 Phone: +254-3317641-7 
+    🌐 Website: https://www.asalrd.go.ke/
     """)
 
     st.info("Use the sidebar to navigate to Employee Management or Asset Reports.")
