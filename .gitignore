@@ -169,3 +169,21 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# Streamlit Secrets (if you're using them)
+.secrets.toml
+
+# Log files
+logs/
+*.log
+
+# Python virtual environments (if not already ignored)
+venv/
+.env/
+
+# Cache & temporary files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
