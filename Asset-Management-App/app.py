@@ -137,13 +137,16 @@ if current_page == "assets":
         # Asset Tracking
         st.subheader("📍 Asset Tracking - Search for an Employee")
         search_query = st.text_input("Enter Employee Name or ID")
-        if search_query and 'Responsible officer' in df_assets.columns:
-            filtered_assets = df_assets[(df_assets['Responsible officer'].str.contains(search_query, case=False, na=False)) | 
-                                        (df_assets['Employee ID'].astype(str) == search_query)]
-            if not filtered_assets.empty:
-                st.dataframe(filtered_assets[['Asset Description', 'Current Location', 'Responsible officer']])
+        if search_query:
+            if 'Responsible officer' in df_assets.columns and 'Employee ID' in df_assets.columns:
+                filtered_assets = df_assets[(df_assets['Responsible officer'].str.contains(search_query, case=False, na=False)) | 
+                                            (df_assets['Employee ID'].astype(str) == search_query)]
+                if not filtered_assets.empty:
+                    st.dataframe(filtered_assets[['Asset Description', 'Current Location', 'Responsible officer']])
+                else:
+                    st.warning("No assets found for this employee.")
             else:
-                st.warning("No assets found for this employee.")
+                st.error("Missing 'Employee ID' or 'Responsible officer' column in the dataset.")
 
         # Condition Monitoring
         st.subheader("⚠️ Condition Monitoring - Assets in Poor Condition")
