@@ -19,7 +19,8 @@ if not ASSET_FILE.exists():
 
 # Load Data
 df_employees = pd.read_excel(EMPLOYEE_FILE)
-df_assets = pd.read_csv(ASSET_FILE)
+df_assets = pd.read_csv(ASSET_FILE, encoding="ISO-8859-1")
+
 
 # Sidebar navigation
 menu = st.sidebar.selectbox("Select Page", ["Home", "Employee Management", "Asset Reports"])
