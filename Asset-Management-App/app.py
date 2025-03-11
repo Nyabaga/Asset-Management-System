@@ -6,7 +6,7 @@ from PIL import Image
 
 # Load datasets
 EMPLOYEE_FILE = Path("employees.xlsx")
-ASSET_FILE = Path("cleaned_asset_register.csv")
+#ASSET_FILE = Path("cleaned_asset_register.csv")
 
 # Ensure files exist
 if not EMPLOYEE_FILE.exists():
@@ -18,8 +18,22 @@ if not ASSET_FILE.exists():
     st.stop()
 
 # Load Data
-df_employees = pd.read_excel(EMPLOYEE_FILE)
-df_assets = pd.read_csv(ASSET_FILE, encoding="ISO-8859-1")
+#df_employees = pd.read_excel(EMPLOYEE_FILE)
+#df_assets = pd.read_csv(ASSET_FILE, encoding="ISO-8859-1")
+# Google Drive file ID 
+
+file_id = "1a7FV29v03RPc6gzfCUkNyKov-lhvjVSr"
+gdrive_url = f"https://drive.google.com/uc?export=download&id={file_id}"
+
+@st.cache_data
+def load_data(url):
+    return pd.read_csv(url)
+
+try:
+    df = load_data(gdrive_url)
+    st.write("### Asset Register Preview", df.head())
+except Exception as e:
+    st.error(f"Failed to load data: {e}")
 
 
 # Sidebar navigation
