@@ -6,7 +6,7 @@ from PIL import Image
 
 # Load datasets
 EMPLOYEE_FILE = Path("employees.xlsx")
-ASSET_FILE = Path("cleaned_asset_register.xlsx")
+ASSET_FILE = Path("cleaned_asset_register.csv")
 
 # Ensure files exist
 if not EMPLOYEE_FILE.exists():
