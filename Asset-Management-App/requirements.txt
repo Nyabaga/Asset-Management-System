@@ -6,5 +6,8 @@ scikit-learn
 prophet
 requests
 beautifulsoup4
-
+openpyxl
+requests
+chardet
+Pillow
 
