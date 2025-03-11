@@ -110,4 +110,37 @@ with tabs[1]:
                 st.dataframe(df_employees)
 
     elif action == "Delete Employee":
-        emp_id = st.selectbox("Select Employee ID to Delete", df_emp
+        emp_id = st.selectbox("Select Employee ID to Delete", df_employees['Employee ID'])
+        if st.button("Delete Employee"):
+            df_employees = df_employees[df_employees['Employee ID'] != emp_id]
+            df_employees.to_excel(EMPLOYEE_FILE, index=False)
+            st.success(f"Employee {emp_id} deleted successfully!")
+
+            # Reload the updated file
+            df_employees = pd.read_excel(EMPLOYEE_FILE)
+            st.dataframe(df_employees)
+
+# ----------------- ASSET REPORTS PAGE -----------------
+with tabs[2]:
+    st.header("Asset Reports")
+
+    if df_assets is not None:
+        # Asset Tracking
+        st.subheader("📍 Asset Tracking - Where are the assets?")
+        st.dataframe(df_assets[['Asset Description', 'Current Location', 'Responsible officer']])
+
+        # Condition Monitoring
+        st.subheader("⚠️ Condition Monitoring - Assets in Poor Condition")
+        poor_assets = df_assets[df_assets['Asset condition'].str.lower() == 'poor']
+        st.dataframe(poor_assets[['Asset Description', 'Current Location', 'Responsible officer']])
+
+        # Financing Insights
+        st.subheader("💰 Financing Insights - Asset Funding Sources")
+        financing_report = df_assets.groupby('Financed by/ source of funds')['Asset Description'].count().reset_index()
+        financing_report.columns = ['Source of Funds', 'Number of Assets']
+        st.dataframe(financing_report)
+
+        # Optional - Simple Visualization
+        st.bar_chart(financing_report.set_index('Source of Funds'))
+    else:
+        st.error("Failed to load asset register data.")
