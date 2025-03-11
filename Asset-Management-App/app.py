@@ -1,17 +1,19 @@
 import streamlit as st
 import pandas as pd
 import os
+from pathlib import Path
+from PIL import Image
 
 # Load datasets
-EMPLOYEE_FILE = 'employees.xlsx'
-ASSET_FILE = 'cleaned_asset_register.xlsx'
+EMPLOYEE_FILE = Path("employees.xlsx")
+ASSET_FILE = Path("cleaned_asset_register.xlsx")
 
 # Ensure files exist
-if not os.path.exists(EMPLOYEE_FILE):
+if not EMPLOYEE_FILE.exists():
     df_employees = pd.DataFrame(columns=['Employee ID', 'Name', 'Department', 'Phone', 'Email'])
     df_employees.to_excel(EMPLOYEE_FILE, index=False)
 
-if not os.path.exists(ASSET_FILE):
+if not ASSET_FILE.exists():
     st.error(f"Missing file: {ASSET_FILE}. Please upload the cleaned asset file.")
     st.stop()
 
@@ -24,14 +26,13 @@ menu = st.sidebar.selectbox("Select Page", ["Home", "Employee Management", "Asse
 
 # ----------------- HOME PAGE -----------------
 if menu == "Home":
-    st.markdown(
-        """
-        <div style="text-align: center;">
-            <img src="header_logo.png" width="700">
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+    image_path = Path("header_logo.png")
+    if image_path.exists():
+        img = Image.open(image_path)
+        st.image(img, caption="Company Logo", use_column_width=True)
+    else:
+        st.error("Image file not found! Please check the path.")
+    
     st.title("Welcome to Asset Management System")
 
     st.write("""
@@ -50,7 +51,7 @@ if menu == "Home":
 
     ### Contact Us
     📧 Email: ps@asals.go.ke  
-    📞 Phone: +254-3317641-7 
+    📞 Phone: +254-3317641-7  
     🌐 Website: https://www.asalrd.go.ke/
     """)
 
@@ -115,4 +116,3 @@ elif menu == "Asset Reports":
 
     # Optional - Simple Visualization
     st.bar_chart(financing_report.set_index('Source of Funds'))
-
