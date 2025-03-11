@@ -3,6 +3,7 @@ import pandas as pd
 import os
 from pathlib import Path
 from PIL import Image
+import chardet
 
 # Load datasets
 EMPLOYEE_FILE = Path("employees.xlsx")
@@ -22,19 +23,33 @@ if not EMPLOYEE_FILE.exists():
 #df_assets = pd.read_csv(ASSET_FILE, encoding="ISO-8859-1")
 # Google Drive file ID 
 
+# Detect encoding of the local file
+with open("Cleaned_Asset_Register.csv", "rb") as f:
+    raw_data = f.read()
+    result = chardet.detect(raw_data)
+    detected_encoding = result["encoding"]
+    print(f"Detected Encoding: {detected_encoding}")
+
+# Google Drive file ID
 file_id = "1a7FV29v03RPc6gzfCUkNyKov-lhvjVSr"
 gdrive_url = f"https://drive.google.com/uc?export=download&id={file_id}"
 
 @st.cache_data
-def load_data(url):
-    return pd.read_csv(url)
+def load_data(url, encoding):
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        df = pd.read_csv(pd.io.common.StringIO(response.text), encoding=encoding)
+        return df
+    except Exception as e:
+        st.error(f"Failed to load data: {e}")
+        return None
 
-try:
-    df = load_data(gdrive_url)
+# Load and display data
+df = load_data(gdrive_url, detected_encoding)
+
+if df is not None:
     st.write("### Asset Register Preview", df.head())
-except Exception as e:
-    st.error(f"Failed to load data: {e}")
-
 
 # Sidebar navigation
 menu = st.sidebar.selectbox("Select Page", ["Home", "Employee Management", "Asset Reports"])
