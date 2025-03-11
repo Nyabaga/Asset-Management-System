@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 from PIL import Image
 import chardet
+import requests 
 
 # Load datasets
 EMPLOYEE_FILE = Path("employees.xlsx")
@@ -31,6 +32,14 @@ with open("Cleaned_Asset_Register.csv", "rb") as f:
     print(f"Detected Encoding: {detected_encoding}")
 
 # Google Drive file ID
+# Detect encoding of the local file
+with open("Cleaned_Asset_Register.csv", "rb") as f:
+    raw_data = f.read()
+    result = chardet.detect(raw_data)
+    detected_encoding = result["encoding"]
+    print(f"Detected Encoding: {detected_encoding}")
+
+# Google Drive file ID
 file_id = "1a7FV29v03RPc6gzfCUkNyKov-lhvjVSr"
 gdrive_url = f"https://drive.google.com/uc?export=download&id={file_id}"
 
@@ -50,7 +59,7 @@ df = load_data(gdrive_url, detected_encoding)
 
 if df is not None:
     st.write("### Asset Register Preview", df.head())
-
+    
 # Sidebar navigation
 menu = st.sidebar.selectbox("Select Page", ["Home", "Employee Management", "Asset Reports"])
 
