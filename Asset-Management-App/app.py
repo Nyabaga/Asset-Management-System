@@ -34,7 +34,7 @@ df_employees = pd.read_excel(EMPLOYEE_FILE)
 df_assets = load_data(gdrive_url)
 
 # ===================== NAVIGATION MENU =====================
-st.image("header_logo.png", use_container_width=True)
+st.image("images/header_logo.png", use_container_width=True)
 st.markdown("""
     <style>
         .nav-buttons {
