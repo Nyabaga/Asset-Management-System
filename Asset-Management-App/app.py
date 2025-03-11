@@ -13,9 +13,9 @@ if not EMPLOYEE_FILE.exists():
     df_employees = pd.DataFrame(columns=['Employee ID', 'Name', 'Department', 'Phone', 'Email'])
     df_employees.to_excel(EMPLOYEE_FILE, index=False)
 
-if not ASSET_FILE.exists():
-    st.error(f"Missing file: {ASSET_FILE}. Please upload the cleaned asset file.")
-    st.stop()
+#if not ASSET_FILE.exists():
+    #st.error(f"Missing file: {ASSET_FILE}. Please upload the cleaned asset file.")
+    #st.stop()
 
 # Load Data
 #df_employees = pd.read_excel(EMPLOYEE_FILE)
