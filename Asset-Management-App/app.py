@@ -30,7 +30,8 @@ if menu == "Home":
     image_path = Path("header_logo.png")
     if image_path.exists():
         img = Image.open(image_path)
-        st.image(img, caption="Company Logo", use_column_width=True)
+        st.image("header_logo.png", use_container_width=True)
+
     else:
         st.error("Image file not found! Please check the path.")
     
