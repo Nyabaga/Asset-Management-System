@@ -5,6 +5,7 @@ from pathlib import Path
 from PIL import Image
 import chardet
 import requests
+from io import StringIO
 
 # ===================== LOAD DATA FILES =====================
 EMPLOYEE_FILE = Path("employees.xlsx")
@@ -14,27 +15,19 @@ if not EMPLOYEE_FILE.exists():
     df_employees = pd.DataFrame(columns=['Employee ID', 'Name', 'Department', 'Phone', 'Email'])
     df_employees.to_excel(EMPLOYEE_FILE, index=False)
 
-# Detect Encoding for Assets File
-with open("Cleaned_Asset_Register.csv", "rb") as f:
-    raw_data = f.read()
-    detected_encoding = chardet.detect(raw_data)["encoding"]
-
-# Google Drive file ID for Assets
 file_id = "1a7FV29v03RPc6gzfCUkNyKov-lhvjVSr"
 gdrive_url = f"https://drive.google.com/uc?export=download&id={file_id}"
 
 @st.cache_data
-def load_data(url, encoding):
-    """ Load asset register data from Google Drive """
-    try:
-        response = requests.get(url)
-        response.raise_for_status()
-        df = pd.read_csv(pd.io.common.StringIO(response.text), encoding=encoding)
-        return df
-    except Exception as e:
-        st.error(f"Failed to load data: {e}")
-        return None
+def load_data(url):
+    response = requests.get(url)
+    if response.status_code == 200:
+        csv_data = StringIO(response.text)
+        return pd.read_csv(csv_data)
+    else:
+        st.error("Failed to fetch data from Google Drive")
 
+df_assets = load_data(gdrive_url)
 # Load Employees
 df_employees = pd.read_excel(EMPLOYEE_FILE)
 
