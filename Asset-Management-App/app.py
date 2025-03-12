@@ -3,7 +3,6 @@ import pandas as pd
 import os
 from pathlib import Path
 from PIL import Image
-import chardet
 import requests
 from io import StringIO
 
@@ -35,27 +34,6 @@ df_assets = load_data(gdrive_url)
 
 # ===================== NAVIGATION MENU =====================
 st.image("header_logo.png", use_container_width=True)
-st.markdown("""
-    <style>
-        .nav-buttons {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            margin-top: 20px;
-        }
-        .stButton>button {
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 5px;
-            border: none;
-            cursor: pointer;
-        }
-        .stButton>button:hover {
-            background-color: #45a049;
-        }
-    </style>
-""", unsafe_allow_html=True)
 
 col1, col2, col3 = st.columns(3)
 with col1:
@@ -79,32 +57,21 @@ current_page = st.query_params.get("page", default_page)
 if current_page == "home":
     st.title("Welcome to Asset Management System")
     st.write("""
-        ### About the Organization
-        **Ministry of East African Community, the ASALs and Regional Development**  
-        Responsible for asset management and tracking to ensure accountability and proper resource utilization.
-
         ### About This App
-        - 📍 **Track Assets:** See where assets are and who is responsible.  
-        - 🏢 **Monitor Asset Condition:** Identify assets in poor condition.  
-        - 💰 **Analyze Financing:** Check asset funding sources.  
-        - 👥 **Manage Employees:** Add, edit, search, and delete employees.  
-        - 📈 **Works on desktop & mobile**  
-
-        ### Contact Us
-        📧 Email: ps@asals.go.ke  
-        📞 Phone: +254-3317641-7  
-        🌐 [Visit Our Website](https://www.asalrd.go.ke/)
+        - 📍 **Track Assets**
+        - 🏢 **Monitor Asset Condition**
+        - 💰 **Analyze Financing**
+        - 👥 **Manage Employees**
     """)
 
 # ===================== EMPLOYEE MANAGEMENT PAGE =====================
 if current_page == "employees":
     st.header("Employee Management")
-
-    action = st.radio("Choose Action", ["View Employees", "Add Employee", "Edit Employee", "Delete Employee"])  # ---- New Option Added ----
+    action = st.radio("Choose Action", ["View Employees", "Add Employee", "Edit Employee", "Delete Employee"])
 
     if action == "View Employees":
         st.dataframe(df_employees)
-
+    
     elif action == "Add Employee":
         with st.form("Add Employee Form"):
             emp_id = st.text_input("Employee ID")
@@ -113,7 +80,7 @@ if current_page == "employees":
             phone = st.text_input("Phone")
             email = st.text_input("Email")
             assigned_assets = st.text_input("Assigned Assets")
-
+            
             submitted = st.form_submit_button("Add Employee")
             if submitted:
                 new_employee = pd.DataFrame([{ 'Employee ID': emp_id, 'Name': name, 'Department': department, 'Phone': phone, 'Email': email, 'Assigned Assets': assigned_assets }])
@@ -121,37 +88,27 @@ if current_page == "employees":
                 df_employees.to_excel(EMPLOYEE_FILE, index=False)
                 st.success(f"Employee {name} added successfully!")
                 st.rerun()
-
     
     elif action == "Edit Employee":
         st.subheader("Edit Employee Details")
-
-        # Load data
-        df = df_employees
-
-        # Select employee by ID
-        employee_ids = df["Employee ID"].astype(str).tolist()
+        employee_ids = df_employees["Employee ID"].astype(str).tolist()
         selected_id = st.selectbox("Select Employee ID", employee_ids)
-
-        # Get employee details
-        employee = df[df["Employee ID"].astype(str) == selected_id].iloc[0]
-
-        # Editable fields
+        employee = df_employees[df_employees["Employee ID"].astype(str) == selected_id].iloc[0]
+        
         name = st.text_input("Name", employee["Name"])
         department = st.text_input("Department", employee["Department"])
         phone = st.text_input("Phone", str(employee["Phone"]))
         email = st.text_input("Email", employee["Email"])
         assigned_assets = st.text_input("Assigned Assets", employee["Assigned Assets"])
-
-        # Update the DataFrame when user clicks Save
+        
         if st.button("Save Changes"):
-            df.loc[df["Employee ID"].astype(str) == selected_id, ["Name", "Department", "Phone", "Email", "Assigned Assets"]] = [
+            df_employees.loc[df_employees["Employee ID"].astype(str) == selected_id, ["Name", "Department", "Phone", "Email", "Assigned Assets"]] = [
                 name, department, phone, email, assigned_assets
             ]
-            df.to_excel(EMPLOYEE_FILE, index=False)
+            df_employees.to_excel(EMPLOYEE_FILE, index=False)
             st.success("Employee details updated successfully!")
             st.rerun()
-
+    
     elif action == "Delete Employee":
         emp_id = st.selectbox("Select Employee ID to Delete", df_employees['Employee ID'])
         if st.button("Delete Employee"):
@@ -163,9 +120,8 @@ if current_page == "employees":
 # ===================== ASSET REPORTS PAGE =====================
 if current_page == "assets":
     st.header("Asset Reports")
-
+    
     if df_assets is not None:
-        # Asset Tracking
         st.subheader("📍 Asset Tracking - Search for an Employee")
         search_query = st.text_input("Enter Employee Name or ID")
         if search_query:
@@ -179,7 +135,6 @@ if current_page == "assets":
             else:
                 st.error("Missing 'Employee ID' or 'Responsible officer' column in the dataset.")
 
-        # Condition Monitoring
         st.subheader("⚠️ Condition Monitoring - Assets in Poor Condition")
         if 'Asset condition' in df_assets.columns:
             poor_assets = df_assets[df_assets['Asset condition'].str.lower() == 'poor']
@@ -187,7 +142,6 @@ if current_page == "assets":
         else:
             st.warning("Column 'Asset condition' not found in dataset.")
 
-        # Financing Insights
         st.subheader("💰 Financing Insights - Asset Funding Sources")
         if 'Financed by/ source of funds' in df_assets.columns:
             financing_report = df_assets.groupby('Financed by/ source of funds')['Asset Description'].count().reset_index()
