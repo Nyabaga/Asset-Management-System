@@ -2,8 +2,10 @@ import streamlit as st
 import pandas as pd
 import os
 from pathlib import Path
-from io import StringIO
+from PIL import Image
+import chardet
 import requests
+from io import StringIO
 
 # ===================== LOAD DATA FILES =====================
 EMPLOYEE_FILE = Path("employees.xlsx")
@@ -33,13 +35,12 @@ df_assets = load_data(gdrive_url)
 
 # ===================== NAVIGATION MENU =====================
 st.image("header_logo.png", use_container_width=True)
-st.title("Asset Management System")
-st.sidebar.header("Navigation")
-page = st.sidebar.radio("Go to:", ["🏠 Home", "👥 Employee Management", "📊 Asset Reports"])
+
+selected_tab = st.selectbox("Navigation", ["🏠 Home", "👥 Employee Management", "📊 Asset Reports"])
 
 # ===================== HOME PAGE =====================
-if page == "🏠 Home":
-    st.header("Welcome to Asset Management System")
+if selected_tab == "🏠 Home":
+    st.title("Welcome to Asset Management System")
     st.write("""
         ### About the Organization
         **Ministry of East African Community, the ASALs and Regional Development**  
@@ -59,14 +60,13 @@ if page == "🏠 Home":
     """)
 
 # ===================== EMPLOYEE MANAGEMENT PAGE =====================
-if page == "👥 Employee Management":
+if selected_tab == "👥 Employee Management":
     st.header("Employee Management")
     action = st.radio("Choose Action", ["View Employees", "Add Employee", "Edit Employee", "Delete Employee"])
-
-    if action == "View Employees":
-        st.subheader("Employee List")
-        st.dataframe(df_employees)
     
+    if action == "View Employees":
+        st.dataframe(df_employees)
+
     elif action == "Add Employee":
         with st.form("Add Employee Form"):
             emp_id = st.text_input("Employee ID")
@@ -75,6 +75,7 @@ if page == "👥 Employee Management":
             phone = st.text_input("Phone")
             email = st.text_input("Email")
             assigned_assets = st.text_input("Assigned Assets")
+
             submitted = st.form_submit_button("Add Employee")
             if submitted:
                 new_employee = pd.DataFrame([{ 'Employee ID': emp_id, 'Name': name, 'Department': department, 'Phone': phone, 'Email': email, 'Assigned Assets': assigned_assets }])
@@ -85,16 +86,22 @@ if page == "👥 Employee Management":
 
     elif action == "Edit Employee":
         st.subheader("Edit Employee Details")
+        
         employee_ids = df_employees["Employee ID"].astype(str).tolist()
         selected_id = st.selectbox("Select Employee ID", employee_ids)
+        
         employee = df_employees[df_employees["Employee ID"].astype(str) == selected_id].iloc[0]
+        
         name = st.text_input("Name", employee["Name"])
         department = st.text_input("Department", employee["Department"])
         phone = st.text_input("Phone", str(employee["Phone"]))
         email = st.text_input("Email", employee["Email"])
         assigned_assets = st.text_input("Assigned Assets", employee["Assigned Assets"])
+
         if st.button("Save Changes"):
-            df_employees.loc[df_employees["Employee ID"].astype(str) == selected_id, ["Name", "Department", "Phone", "Email", "Assigned Assets"]] = [name, department, phone, email, assigned_assets]
+            df_employees.loc[df_employees["Employee ID"].astype(str) == selected_id, ["Name", "Department", "Phone", "Email", "Assigned Assets"]] = [
+                name, department, phone, email, assigned_assets
+            ]
             df_employees.to_excel(EMPLOYEE_FILE, index=False)
             st.success("Employee details updated successfully!")
             st.rerun()
@@ -108,20 +115,30 @@ if page == "👥 Employee Management":
             st.rerun()
 
 # ===================== ASSET REPORTS PAGE =====================
-if page == "📊 Asset Reports":
+if selected_tab == "📊 Asset Reports":
     st.header("Asset Reports")
+    
     if df_assets is not None:
         st.subheader("📍 Asset Tracking - Search for an Employee")
         search_query = st.text_input("Enter Employee Name or ID")
         if search_query:
-            if 'Responsible officer' in df_assets.columns and 'Employee ID' in df_assets.columns:
-                filtered_assets = df_assets[(df_assets['Responsible officer'].str.contains(search_query, case=False, na=False)) | 
-                                            (df_assets['Employee ID'].astype(str) == search_query)]
-                if not filtered_assets.empty:
-                    st.dataframe(filtered_assets[['Asset Description', 'Current Location', 'Responsible officer']])
-                else:
-                    st.warning("No assets found for this employee.")
+            filtered_assets = df_assets[(df_assets['Responsible officer'].str.contains(search_query, case=False, na=False)) | 
+                                        (df_assets['Employee ID'].astype(str) == search_query)]
+            if not filtered_assets.empty:
+                st.dataframe(filtered_assets[['Asset Description', 'Current Location', 'Responsible officer']])
             else:
-                st.error("Missing 'Employee ID' or 'Responsible officer' column in the dataset.")
+                st.warning("No assets found for this employee.")
+        
+        st.subheader("⚠️ Condition Monitoring - Assets in Poor Condition")
+        if 'Asset condition' in df_assets.columns:
+            poor_assets = df_assets[df_assets['Asset condition'].str.lower() == 'poor']
+            st.dataframe(poor_assets[['Asset Description', 'Current Location', 'Responsible officer']])
+        
+        st.subheader("💰 Financing Insights - Asset Funding Sources")
+        if 'Financed by/ source of funds' in df_assets.columns:
+            financing_report = df_assets.groupby('Financed by/ source of funds')['Asset Description'].count().reset_index()
+            financing_report.columns = ['Source of Funds', 'Number of Assets']
+            st.dataframe(financing_report)
+            st.bar_chart(financing_report.set_index('Source of Funds'))
     else:
         st.error("Failed to load asset register data.")
